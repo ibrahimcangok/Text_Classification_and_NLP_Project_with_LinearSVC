@@ -1,4 +1,4 @@
-Ekran Görüntüleri --> 
+Screenshots -->
 
 ![Ekran görüntüsü 2024-01-30 103230](https://github.com/ibrahimcangok/Text_Classification_and_NLP_Project_with_LinearSVC/assets/106431802/58dafd26-234d-460f-a955-c885c1a4006e)
 
