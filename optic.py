@@ -3,22 +3,18 @@ import warnings
 import numpy as np
 from nltk.corpus import stopwords
 import nltk
-from nltk.tag import pos_tag
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 import re
 from googletrans import Translator
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.naive_bayes import ComplementNB
+from sklearn.naive_bayes import MultinomialNB, ComplementNB
 from langdetect import detect_langs
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, f1_score
-from sklearn.linear_model import LinearRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import SGDClassifier
+from sklearn.linear_model import LinearRegression, SGDClassifier
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -40,6 +36,7 @@ def create_word_cloud(text, title):
 
     plt.title(title)
     plt.show()
+
 def calculate_text_features(text):
     words = text.split()
     word_count = len(words)
@@ -49,6 +46,7 @@ def calculate_text_features(text):
     avg_sentence_length = sum(sentence_lengths) / len(sentence_lengths) if sentence_lengths else 0
 
     return word_count, avg_sentence_length
+
 def check_missing_values(data):
     missing_values = data.isnull().sum()
     missing_percentage = (missing_values / len(data)) * 100
@@ -63,7 +61,9 @@ def handle_missing_values(data, threshold=10):
     data_dropped = data.drop(columns=columns_to_drop)
 
     # Impute missing values in remaining columns
-    data_imputed = data_dropped.fillna(method='ffill')  # You can use different imputation methods
+    data_imputed = data_dropped.ffill()  # Geçerli olan
+    # Alternatif olarak:
+    # data_imputed = data_dropped.ffill()
 
     return data_imputed
 
@@ -92,6 +92,7 @@ def load_data(file):
     data['Subject'] = clean_docs(data['Subject'], language="spanish")
 
     return data
+
 def detect_language(text):
     try:
         lang = detect(text)
@@ -104,10 +105,9 @@ def getName(data, threshold):
     allList = fa.index.tolist()
     lis = []
     for i in range(fa.size):
-        if fa[i] <= threshold:
+        if fa.iloc[i] <= threshold:
             lis.append(allList[i])
     return lis
-
 
 def clean_docs(docs, language):
     if language == "english":
@@ -132,6 +132,7 @@ def clean_docs(docs, language):
     while "  " in final:
         final = final.replace("  ", " ")
     return final
+
 def duplicate(row):
     if row['Subject'] == row['Customer Description']:
         return row['Subject']
@@ -139,7 +140,8 @@ def duplicate(row):
 
 def removeStops(text, stops):
     final = []
-    text = re.sub("\(.*?\)", "()", text)
+    text = re.sub(r"\(.*?\)", "()", text)
+
     text = text.translate(str.maketrans("", "", string.punctuation))
     text = text.replace(r"d{1,4}\/\d{1,4}\/\d{1,4}", "")
     text = text.replace(r"d{1,4}\.\d{1,4}\.\d{1,4}", "")
@@ -155,16 +157,16 @@ def removeStops(text, stops):
     if final == "":
         final = 'nwg'
     return final
-def main():
 
+def main():
     data = load_data('Tagged tickets - all time - Optics -2023-07-14-09-18-45.xlsx')
 
     X = data[['Subject', 'Customer Description']]
     y = data['Tag: Issue Details']
 
     # Feature engineering
-    data['Word Count'], data['Avg Sentence Length'] = zip(*data['Subject'].apply(calculate_text_features))
-    data['Word Count'], data['Avg Sentence Length'] = zip(*data['Customer Description'].apply(calculate_text_features))
+    data['Word Count Subject'], data['Avg Sentence Length Subject'] = zip(*data['Subject'].apply(calculate_text_features))
+    data['Word Count Description'], data['Avg Sentence Length Description'] = zip(*data['Customer Description'].apply(calculate_text_features))
 
     # Handle missing values
     data_imputed = handle_missing_values(data)
@@ -211,5 +213,6 @@ def main():
 
     # Display WordCloud for Customer Description
     create_word_cloud(" ".join(data['Customer Description']), "Word Cloud for Customer Description")
+
 if __name__ == "__main__":
     main()
